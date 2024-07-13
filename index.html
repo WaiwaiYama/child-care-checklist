@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>子育てチェックリスト</title>
+    <style>
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .week {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .day {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .time-section {
+            margin-bottom: 10px;
+        }
+        .checklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .buttons {
+            display: flex;
+            gap: 5px;
+        }
+        button {
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: white;
+            cursor: pointer;
+        }
+        .success {
+            background-color: #90EE90;
+        }
+        .normal {
+            background-color: #ADD8E6;
+        }
+        .failure {
+            background-color: #FFA500;
+        }
+    </style>
+</head>
+<body>
+    <h1>子育てチェックリスト</h1>
+    <div id="week" class="week"></div>
+
+    <script>
+        const days = ['月', '火', '水', '木', '金', '土', '日'];
+        const timeSlots = ['朝', '昼', '晩'];
+        const tasks = {
+            '朝': ['着替えの手伝い', '食事サポート', '外出準備の手伝い'],
+            '昼': ['遊び・遊び相手', '感情的なサポート'],
+            '晩': ['食事サポート', '歯磨き', 'お風呂', '寝かしつけ', '絵本の読み聞かせ', '片付け']
+        };
+
+        function createChecklist() {
+            const weekElement = document.getElementById('week');
+            days.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day';
+                dayElement.innerHTML = `<h2>${day}曜日</h2>`;
+
+                timeSlots.forEach(time => {
+                    const timeSection = document.createElement('div');
+                    timeSection.className = 'time-section';
+                    timeSection.innerHTML = `<h3>${time}</h3>`;
+
+                    tasks[time].forEach(task => {
+                        const item = document.createElement('div');
+                        item.className = 'checklist-item';
+                        item.innerHTML = `
+                            <span>${task}</span>
+                            <div class="buttons">
+                                <button onclick="toggleButton(this, 'success')">できた</button>
+                                <button onclick="toggleButton(this, 'normal')">普通</button>
+                                <button onclick="toggleButton(this, 'failure')">できなかった</button>
+                            </div>
+                        `;
+                        timeSection.appendChild(item);
+                    });
+
+                    dayElement.appendChild(timeSection);
+                });
+
+                weekElement.appendChild(dayElement);
+            });
+
+            loadState();
+        }
+
+        function toggleButton(button, className) {
+            const buttons = button.parentElement.children;
+            for (let btn of buttons) {
+                btn.className = btn === button && !btn.classList.contains(className) ? className : '';
+            }
+            saveState();
+        }
+
+        function saveState() {
+            const state = {};
+            document.querySelectorAll('.checklist-item').forEach((item, index) => {
+                const buttons = item.querySelectorAll('button');
+                state[index] = Array.from(buttons).findIndex(btn => btn.className !== '');
+            });
+            localStorage.setItem('checklistState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const state = JSON.parse(localStorage.getItem('checklistState'));
+            if (state) {
+                document.querySelectorAll('.checklist-item').forEach((item, index) => {
+                    const buttons = item.querySelectorAll('button');
+                    if (state[index] !== -1) {
+                        toggleButton(buttons[state[index]], buttons[state[index]].textContent === 'できた' ? 'success' : buttons[state[index]].textContent === '普通' ? 'normal' : 'failure');
+                    }
+                });
+            }
+        }
+
+        createChecklist();
+    </script>
+</body>
+</html>
